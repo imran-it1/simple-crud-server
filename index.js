@@ -33,11 +33,20 @@ async function run() {
 		// Set database collection name
 		const userCollection = client.db("userDB").collection("user");
 
-		// GET API
+		// GET ALL USERS API
 		app.get("/users", async (req, res) => {
 			// Create cursor
 			const cursor = userCollection.find();
 			const result = await cursor.toArray();
+			res.send(result);
+		});
+
+		app.get("/users/:id", async (req, res) => {
+			const id = req.params.id;
+
+			// Get single user data from database
+			const query = { _id: new ObjectId(id) };
+			const result = await userCollection.findOne(query);
 			res.send(result);
 		});
 
@@ -48,6 +57,29 @@ async function run() {
 
 			// Send user data to the database
 			const result = await userCollection.insertOne(user);
+			res.send(result);
+		});
+
+		app.put("/users/:id", async (req, res) => {
+			const id = req.params.id;
+			const user = req.body;
+			console.log("Updated  user", user);
+
+			// Update user info in database
+			const filter = { _id: new ObjectId(id) };
+			const options = { upsert: true };
+			const updatedUser = {
+				$set: {
+					name: user.name,
+					email: user.email,
+				},
+			};
+
+			const result = await userCollection.updateOne(
+				filter,
+				updatedUser,
+				options
+			);
 			res.send(result);
 		});
 
